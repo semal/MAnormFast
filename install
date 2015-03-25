@@ -1,0 +1,14 @@
+Unix-like OS (UNIX, Linux, or Mac OS X):
+
+1. Extract MAnormFast.tar.gz by typing on the command line;
+$ tar xvf MAnormFast.tar.gz
+
+2. Enter the folder created by tar (i.e. ./MAnormFast) and type the following on the command line.
+$ cd MAnormFast
+$ sudo python setup.py install
+
+Note that the installer must have the proper security privilege to install MAnorm at /usr/local/bin; otherwise, the user can install MAnorm at the home as follows.
+$ python setup.py install --prefix=$HOME
+where $HOME stands for the user's home. Then, add a line to the log-in shell script (i.e. .bashrc in case of bash shell)
+export $PYTHONPATH=$PYTHONPATH:$HOME/lib/python2.7/site-packages
+export PATH=pathOfMAnormFast/bin:$PATH
