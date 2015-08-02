@@ -5,7 +5,7 @@
 **Input:**
 There are five input files needed, 2 peaks files and 2 reads files, and ouptut folder name:
     
-    python MAnorm.py --p1 peak1 --r1 read1 --p2 peak2 --r2 read1 -o MAnorm_ouput_folder_name
+    python MAnorm.py --p1 peak1 --r1 read1 --p2 peak2 --r2 read1 -o ouput_folder_name
 
 **Note:** peak file support bed format and macs output xls format. The first three columns 
 should be ‘chr start end’ , if there are summit column, should put it in fourth cloumn.
