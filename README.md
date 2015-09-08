@@ -3,7 +3,7 @@
 > if you has any question, you could contact us by email: gzhsss2@gmail.com
 
 **Input:**
-There are five input files needed, 2 peaks files and 2 reads files, and ouptut folder name:
+There are five input arguments needed, 2 peaks files and 2 reads files, and ouptut folder name:
     
     python MAnorm.py --p1 peak1 --r1 read1 --p2 peak2 --r2 read1 -o ouput_folder_name
 
