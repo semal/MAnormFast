@@ -1,6 +1,5 @@
-> this is a README of python-version MAnorm command tool. 
 
-> if you has any question, you could contact us by email: gzhsss2@gmail.com
+## Command
 
 **Input:**
 There are five input arguments needed, 2 peaks files and 2 reads files, and ouptut folder name:
@@ -12,3 +11,15 @@ should be ‘chr start end’ , if there are summit column, should put it in fou
 
 **Other Options:**
 > **Note:** Using --help for seeing details.
+
+## Installation
+
+1. python setup.py install for pacakge installation.
+2. add /bin/MAnormFast script to PATH and chmod -x MAnormFast for excutive function.
+3. you could use MAnormFast as a command alreay.
+
+Good luck.
+
+> if you has any question, you could contact us by email: gzhsss2@gmail.com
+
+semal
