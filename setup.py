@@ -5,7 +5,7 @@ def main():
 
     setup(
         name='MAnormFast',
-        version='0.0.1',
+        version='0.1.0',
         packages=['MAnormFast'],
         package_dir={'MAnormFast': 'lib'},
         scripts=['bin/MAnormFast'],
