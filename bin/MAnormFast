@@ -1,73 +1,120 @@
 #!/usr/bin/env python
 # coding=utf-8
-from optparse import OptionParser
 import os
+from optparse import OptionParser
 
-from MAnormFast.MAnorm_io import *
-from MAnormFast.peaks import *
+try:
+    from MAnormFast.MAnorm_io import *
+    from MAnormFast.peaks import *
+except ImportError:
+    from lib.MAnorm_io import *
+    from lib.peaks import *
 
 
 def __parse_args():
     opt_parser = OptionParser()
-    opt_parser.add_option('--p1', dest='pkf1',
-                          help='numerator peaks file path, It should contain at least three columns, '
-                               'which are chromosome name, start and end position of each peak. If the '
-                               'fourth column exists, it should be summit position (relative to peak start). '
-                               'Otherwise, MAnorm will use the center of peaks instead.')
-    opt_parser.add_option('--p2', dest='pkf2',
-                          help='denominator peaks file path')
-    opt_parser.add_option('--r1', dest='rdf1',
-                          help='numerator reads file path, It should be of bed format, in which the first, '
-                               'second, third and sixth columns are the chromosome, start, end and strand, '
-                               'respectively.')
-    opt_parser.add_option('--r2', dest='rdf2',
-                          help='denominator reads file path')
-    opt_parser.add_option('--s1', dest='sft1', type='int', default=100,
-                          help='read shift size of sample 1, which should be set as the average '
-                               'size of DNA fragments, default=100.')
-    opt_parser.add_option('--s2', dest='sft2', type='int', default=100,
-                          help='read shift size of sample 2, default=100.')
-    opt_parser.add_option('-n', dest='random_time', type='int', default=5,
-                          help='number of random permutations to test the enrichment of '
-                               'overlapping between two peak sets, default=5.')
-    opt_parser.add_option('-o', dest='output',
-                          help='Name of this comparison, which will be also used as the name '
-                               'of folder created to store.')
-    opt_parser.add_option('-e', dest='extension', type='int', default=1000,
-                          help='default=1000, 2*extension=size of the window centered at peak '
-                               'summit to calculate reads density. The window size should match '
-                               'the typical length of peaks, thus we recommend extension=1000 '
-                               'for sharp histone marks like H3K4me2/3 or H3K9/27ac, '
-                               'extension=500 for transcription factor or DNase-seq.')
-    opt_parser.add_option('-d', dest='smt_dist', type='int',
-                          help='summit to summit distance cutoff, default=extension/2. '
-                               'Only those common peaks with distance between their summits in '
-                               '2 samples smaller than this value will be considered as real '
-                               'common peaks for building the normalization model.')
-    opt_parser.add_option('-s', dest='output_no_merge', action='store_true', default=False,
-                          help='By default, MAnorm will first separate both sets of input peaks '
-                               'into common and unique peaks, by checking whether they have overlap '
-                               'with any peak in the other sample, and then merge the 2 sets of '
-                               'common peaks into 1 group of non-overlapping ones. But if this option '
-                               'is used, MAnorm would not merge the common peaks and the peaks in '
-                               'output files will be exactly the same as those from input.')
-    opt_parser.add_option('-v', dest='overlap_dependent', action='store_true', default=False,
-                          help='if this option is used, MAnorm will choose biased peaks only from unique peaks, and '
-                               'choose unbiased peaks only from common peaks. But if this option is not used, MAnorm '
-                               'will choose biased and unbiased peaks just based on the M-value and P-value cutoffs, '
-                               'without checking whether they are common or unique peaks.')
-    opt_parser.add_option('-p', dest='biased_p', type='float', default=0.01,
-                          help='Cutoff of P-value to define biased (high-confidence sample 1 or 2-specific) peaks, '
-                               'default=0.01.')
-    opt_parser.add_option('-m', dest='biased_m', type='float', default=1.,
-                          help='Cutoff of M-value to define biased peaks, default=1. Sample 1 biased peaks are defined '
-                               'as sample 1 unique peaks with M-value > mcut_biased and P-value < pcut_biased, while '
-                               'sample 2 biased peaks are defined as sample 2 unique peaks with '
-                               'M-value < -1*mcut_biased and P-value < pcut_biased.')
-    opt_parser.add_option('-u', dest='unbiased_m', type='float', default=1.,
-                          help='Cutoff of M-value to define unbiased (high-confidence non-specific) peaks'
-                               'between 2 samples, default=1. They are defined to be the common peaks with'
-                               ' -1*mcut_unbiased < M-value < mcut_unbiased and P-value > pcut_biased.')
+    opt_parser.add_option(
+        '--p1', dest='pkf1',
+        help='numerator peaks file path, It should contain at least three '
+             'columns, which are chromosome name, start and end position of '
+             'each peak. If the fourth column exists, it should be summit '
+             'position (relative to peak start). Otherwise, MAnorm will use '
+             'the center of peaks instead.'
+    )
+    opt_parser.add_option(
+        '--p2', dest='pkf2',
+        help='denominator peaks file path'
+    )
+    opt_parser.add_option(
+        '--r1', dest='rdf1',
+        help='numerator reads file path, It should be of bed format, in which '
+             'the first, second, third and sixth columns are the chromosome, '
+             'start, end and strand, respectively.'
+    )
+    opt_parser.add_option(
+        '--r2', dest='rdf2',
+        help='denominator reads file path'
+    )
+    opt_parser.add_option(
+        '--s1', dest='sft1', type='int', default=100,
+        help='read shift size of sample 1, which should be set as the average '
+             'size of DNA fragments, default=100.'
+    )
+    opt_parser.add_option(
+        '--s2', dest='sft2', type='int', default=100,
+        help='read shift size of sample 2, default=100.'
+    )
+    opt_parser.add_option(
+        '-n', dest='random_time', type='int', default=5,
+        help='number of random permutations to test the enrichment of '
+             'overlapping between two peak sets, default=5.'
+    )
+    opt_parser.add_option(
+        '-o', dest='output',
+        help='Name of this comparison, which will be also used as the name '
+             'of folder created to store.'
+    )
+    opt_parser.add_option(
+        '-e', dest='extension', type='int', default=1000,
+        help='default=1000, 2*extension=size of the window centered at peak '
+             'summit to calculate reads density. The window size should match '
+             'the typical length of peaks, thus we recommend extension=1000 '
+             'for sharp histone marks like H3K4me2/3 or H3K9/27ac, '
+             'extension=500 for transcription factor or DNase-seq.'
+    )
+    opt_parser.add_option(
+        '-d', dest='smt_dist', type='int',
+        help='summit to summit distance cutoff, default=extension/2. '
+             'Only those common peaks with distance between their summits in '
+             '2 samples smaller than this value will be considered as real '
+             'common peaks for building the normalization model.'
+    )
+    opt_parser.add_option(
+        '-s', dest='output_no_merge', action='store_true',
+        default=False,
+        help='By default, MAnorm will first separate both sets of input peaks '
+             'into common and unique peaks, by checking whether they have '
+             'overlap with any peak in the other sample, and then merge the 2 '
+             'sets of  peaks into 1 group of non-overlapping ones. But if this '
+             'option is used, MAnorm would not merge the common peaks and the '
+             'peaks in output files will be exactly the same as those from '
+             'input.'
+    )
+    opt_parser.add_option(
+        '-v', dest='overlap_dependent', action='store_true',
+        default=False,
+        help='if this option is used, MAnorm will choose biased peaks only '
+             'from unique peaks, and '
+             'choose unbiased peaks only from common peaks. But if this option '
+             'is not used, MAnorm '
+             'will choose biased and unbiased peaks just based on the M-value '
+             'and P-value cutoffs, '
+             'without checking whether they are common or unique peaks.'
+    )
+    opt_parser.add_option(
+        '-p', dest='biased_p', type='float', default=0.01,
+        help='Cutoff of P-value to define biased (high-confidence sample 1 '
+             'or 2-specific) peaks, '
+             'default=0.01.'
+    )
+    opt_parser.add_option(
+        '-m', dest='biased_m', type='float', default=1.,
+        help='Cutoff of M-value to define biased peaks, default=1. Sample 1 '
+             'biased peaks are defined '
+             'as sample 1 unique peaks with M-value > mcut_biased and '
+             'P-value < pcut_biased, while '
+             'sample 2 biased peaks are defined as sample 2 unique peaks with '
+             'M-value < -1*mcut_biased and P-value < pcut_biased.'
+    )
+    opt_parser.add_option(
+        '-u', dest='unbiased_m', type='float', default=1.,
+        help='Cutoff of M-value to define unbiased '
+             '(high-confidence non-specific) peaks'
+             'between 2 samples, default=1. They are defined to be the '
+             'common peaks with'
+             ' -1*mcut_unbiased < M-value < mcut_unbiased and '
+             'P-value > pcut_biased.'
+    )
 
     return opt_parser.parse_args()
 
@@ -91,8 +138,9 @@ def command():
 
     try:
         os.mkdir(output_folder)
-    except:
-        print '@error: folder name "%s" already exist, please change the output folder name!' % output_folder
+    except OSError:
+        print '@error: folder name "%s" already exist, please change the ' \
+              'output folder name!' % output_folder
         exit(0)
 
     import time
@@ -100,10 +148,11 @@ def command():
     start = time.clock()
 
     pks1_fn, pks2_fn = \
-        os.path.basename(numerator_peaks_fp), os.path.basename(denominator_peaks_fp)
+        os.path.basename(numerator_peaks_fp), os.path.basename(
+            denominator_peaks_fp)
     rds1_fn, rds2_fn = \
-        os.path.basename(numerator_reads_fp), os.path.basename(denominator_reads_fp)
-    # print (pks1_fn, pks2_fn, rds1_fn, rds2_fn, shift1, shift2, ext, min_smt_dist, output_folder)
+        os.path.basename(numerator_reads_fp), os.path.basename(
+            denominator_reads_fp)
     print '\n' \
           '# ARGUMENT LIST:\n' \
           '# numerator peaks file=%s\n' \
@@ -114,8 +163,13 @@ def command():
           '# shift size of denominator reads=%d\n' \
           '# extension size of peak=%d\n' \
           '# min summit to summit distance=%d\n' \
-          '# output folder name=%s\n' % \
-          (pks1_fn, pks2_fn, rds1_fn, rds2_fn, shift1, shift2, ext, min_smt_dist, output_folder)
+          '# output folder name=%s\n' % (
+              pks1_fn, pks2_fn, rds1_fn, rds2_fn,
+              shift1, shift2,
+              ext,
+              min_smt_dist,
+              output_folder
+          )
 
     pks1_fn = pks1_fn.split('.')[0].replace(' ', '_')
     pks2_fn = pks2_fn.split('.')[0].replace(' ', '_')
@@ -123,8 +177,12 @@ def command():
     rds2_fn = rds2_fn.split('.')[0].replace(' ', '_')
 
     print 'Reading Data, please wait for a while...'
-    pks1, pks2 = read_peaks(numerator_peaks_fp), read_peaks(denominator_peaks_fp)
-    reads_pos1, reads_pos2 = read_reads(numerator_reads_fp, shift1), read_reads(denominator_reads_fp, shift2)
+    pks1, pks2 = \
+        read_peaks(numerator_peaks_fp), \
+        read_peaks(denominator_peaks_fp)
+    reads_pos1, reads_pos2 = \
+        read_reads(numerator_reads_fp, shift1), \
+        read_reads(denominator_reads_fp, shift2)
 
     print 'Step1: Classify the 2 peaks by overlap'
     pks1_uniq, pks1_com, pks2_uniq, pks2_com = get_common_peaks(pks1, pks2)
@@ -138,8 +196,13 @@ def command():
     for _ in range(random_time):
         pks2_random = randomize_peaks(pks2)
         pks1_com_new = get_common_peaks(pks1, pks2_random)[1]
-        fcs.append(1. * get_peaks_size(pks1_com) / (get_peaks_size(pks1_com_new) + 0.1))  # 加0.1避免出现分母为零的情况
-    print 'fold change: mean={0:f}, std={1:f}'.format(np.array(fcs).mean(), np.array(fcs).std())
+        fcs.append(
+            1. * get_peaks_size(pks1_com) / (get_peaks_size(pks1_com_new) + 0.1)
+        )  # 加0.1避免出现分母为零的情况
+    print 'fold change: mean={0:f}, std={1:f}'.format(
+        np.array(fcs).mean(),
+        np.array(fcs).std()
+    )
     time.sleep(2)
 
     print 'Step3: Merging common peaks'
@@ -157,11 +220,15 @@ def command():
     time.sleep(2)
 
     print 'Step5: Using merged common peaks to fitting all peaks'
-    ma_fit = use_merged_peaks_fit_model(merged_pks, summit2summit_dist, min_smt_dist)
+    ma_fit = use_merged_peaks_fit_model(
+        merged_pks, summit2summit_dist, min_smt_dist
+    )
     if ma_fit[0] >= 0:
-        print 'Model for normalization: M = %f * A + %f' % (ma_fit[1], ma_fit[0])
+        print 'Model for normalization: ' \
+              'M = %f * A + %f' % (ma_fit[1], ma_fit[0])
     else:
-        print 'Model for normalization: M = %f * A - %f' % (ma_fit[1], abs(ma_fit[0]))
+        print 'Model for normalization: ' \
+              'M = %f * A - %f' % (ma_fit[1], abs(ma_fit[0]))
     time.sleep(2)
 
     print 'Step6: Normalizing all peaks'
@@ -173,69 +240,45 @@ def command():
     print 'Step7: Output result'
     os.chdir(output_folder)
     if output_no_merge:
-        output_normalized_peaks(pks1_uniq, pks1_com, pks1_fn + '_MAvalues.xls', rds1_fn, rds2_fn)
-        output_normalized_peaks(pks2_uniq, pks2_com, pks2_fn + '_MAvalues.xls', rds1_fn, rds2_fn)
+        output_normalized_peaks(
+            pks1_uniq, pks1_com, pks1_fn + '_MAvalues.xls', rds1_fn, rds2_fn
+        )
+        output_normalized_peaks(
+            pks2_uniq, pks2_com, pks2_fn + '_MAvalues.xls', rds1_fn, rds2_fn
+        )
     output_3set_normalized_peaks(
-        pks1_uniq, merged_pks, pks2_uniq, output_folder + '_all_peak_MAvalues.xls', pks1_fn, pks2_fn, rds1_fn, rds2_fn)
+        pks1_uniq, merged_pks, pks2_uniq,
+        output_folder + '_all_peak_MAvalues.xls',
+        pks1_fn, pks2_fn, rds1_fn, rds2_fn
+    )
     os.mkdir('output_figures')
     os.mkdir('output_filters')
     os.mkdir('output_wig_files')
     os.chdir('output_figures')
-    draw_figs_to_show_data(pks1_uniq, pks2_uniq, merged_pks, pks1_fn, pks2_fn, ma_fit, rds1_fn, rds2_fn)
+    draw_figs_to_show_data(
+        pks1_uniq, pks2_uniq,
+        merged_pks,
+        pks1_fn, pks2_fn,
+        ma_fit,
+        rds1_fn, rds2_fn
+    )
     os.chdir('..')
     os.chdir('output_wig_files')
-    output_peaks_mvalue_2wig_file(pks1_uniq, pks2_uniq, merged_pks, output_folder)
+    output_peaks_mvalue_2wig_file(
+        pks1_uniq, pks2_uniq, merged_pks, output_folder
+    )
     os.chdir('..')
     os.chdir('output_filters')
-    output_unbiased_peaks(pks1_uniq, pks2_uniq, merged_pks, unbiased_mvalue, overlap_dependent)
-    output_biased_peaks(pks1_uniq, pks2_uniq, merged_pks, biased_mvalue, biased_pvalue, overlap_dependent)
+    output_unbiased_peaks(
+        pks1_uniq, pks2_uniq, merged_pks, unbiased_mvalue, overlap_dependent
+    )
+    output_biased_peaks(
+        pks1_uniq, pks2_uniq,
+        merged_pks,
+        biased_mvalue, biased_pvalue,
+        overlap_dependent
+    )
     print 'time consumption: %.2f s\nDone!' % (time.clock() - start)
-
-
-def test():
-    EXTENTION = 1000  # peak从summit左右扩展长度的默认值
-    SHIFT1 = 100  #
-    SHIFT2 = 100
-    SUMMIT2SUMMIT_DIST = EXTENTION / 2
-    import time
-
-    start_time = time.clock()
-
-    pks1, reads_pos1 = read_peaks('1_peaks'), read_reads('1-reads.bed', SHIFT1)
-    pks2, reads_pos2 = read_peaks('2_peaks'), read_reads('2-reads.bed', SHIFT2)
-    print 'start calculating peaks read density...'
-    cal_peaks_read_density(pks1, reads_pos1, reads_pos2, EXTENTION)
-    cal_peaks_read_density(pks2, reads_pos1, reads_pos2, EXTENTION)
-
-    print 'classify the 2 peaks by overlap ...'
-    pks1_uniq, pks1_com, pks2_uniq, pks2_com = get_common_peaks(pks1, pks2)
-    print '1_peaks: %d(unique) %d(common)\n2_peaks: %d(unique) %d(common)' % \
-          (get_peaks_size(pks1_uniq), get_peaks_size(pks1_com), get_peaks_size(pks2_uniq), get_peaks_size(pks2_com))
-
-    fcs = []
-    for _ in range(5):
-        pks2_random = randomize_peaks(pks2)
-        pks1_com_new = get_common_peaks(pks1, pks2_random)[1]
-        fcs.append(1. * get_peaks_size(pks1_com) / get_peaks_size(pks1_com_new))
-    print 'fold change: %f' % (sum(fcs) / len(fcs))
-
-    print 'merging common peaks ...'
-    merged_pks, summit2summit_dist = merge_common_peaks(pks1_com, pks2_com)
-    print 'merged peaks: %d' % get_peaks_size(merged_pks)
-
-    cal_peaks_read_density(merged_pks, reads_pos1, reads_pos2, EXTENTION)
-    ma_fit = use_merged_peaks_fit_model(merged_pks, summit2summit_dist, SUMMIT2SUMMIT_DIST)
-    if ma_fit[0] >= 0:
-        print 'Model for normalization: M = %f * A + %f' % (ma_fit[1], ma_fit[0])
-    else:
-        print 'Model for normalization: M = %f * A - %f' % (ma_fit[1], abs(ma_fit[0]))
-
-    normalize_peaks(pks1, ma_fit)
-    normalize_peaks(pks2, ma_fit)
-    output_normalized_peaks(pks1_uniq, pks1_com, '1_peaks_MAvalues.xls')
-    output_normalized_peaks(pks2_uniq, pks2_com, '2_peaks_MAvalues.xls')
-
-    print 'time consumption: %f s' % (time.clock() - start_time)
 
 
 if __name__ == '__main__':
