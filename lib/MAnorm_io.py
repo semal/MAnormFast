@@ -3,8 +3,8 @@
 from numpy.ma import log2, log10
 import matplotlib
 
-from peaks import Peak, get_peaks_mavalues, get_peaks_normed_mavalues, get_peaks_pvalues, _add_peaks, _sort_peaks_list
-
+from peaks import Peak, get_peaks_mavalues, get_peaks_normed_mavalues, \
+    get_peaks_pvalues, _add_peaks, _sort_peaks_list
 
 matplotlib.use('Agg')
 from matplotlib import pyplot as plt
@@ -23,7 +23,8 @@ def _get_reads_position(reads_fp, shift):
     with open(reads_fp) as fi:
         for li in fi:
             sli = li.split('\t')
-            chrm, start, end, strand = sli[0].strip(), int(sli[1]), int(sli[2]), sli[5].strip()
+            chrm, start, end, strand = \
+                sli[0].strip(), int(sli[1]), int(sli[2]), sli[5].strip()
             pos = start + shift if strand is '+' else end - shift
             try:
                 position[chrm].append(pos)
