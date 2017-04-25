@@ -1,5 +1,4 @@
 cycler==0.10.0
-MAnormFast==0.1.0
 matplotlib==1.5.3
 numpy==1.11.2
 pandas==0.19.1
