@@ -1,4 +1,4 @@
-#!env/bin/python
+#!/usr/bin/python
 # coding=utf-8
 import os
 import sys
@@ -7,14 +7,16 @@ from optparse import OptionParser
 try:
     from MAnormFast.MAnorm_io import *
     from MAnormFast.peaks import *
+    from MAnormFast import version
 except ImportError:
     sys.path.insert(0, os.path.dirname(os.path.realpath(__file__))[:-3])
     from lib.MAnorm_io import *
     from lib.peaks import *
+    from lib import version
 
 
 def __parse_args():
-    opt_parser = OptionParser()
+    opt_parser = OptionParser(version=version)
     opt_parser.add_option(
         '--p1', dest='pkf1',
         help='numerator peaks file path, It should contain at least three '

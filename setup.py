@@ -1,11 +1,12 @@
 from distutils.core import setup
+from lib import version
 
 
 def main():
 
     setup(
         name='MAnormFast',
-        version='0.1.0',
+        version=version,
         packages=['MAnormFast'],
         package_dir={'MAnormFast': 'lib'},
         scripts=['bin/MAnormFast'],
