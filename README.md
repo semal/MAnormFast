@@ -29,6 +29,8 @@ http://semal.cn:2013/
 
 ## Peak file format support
 
+standard bed format is supported. and there are 3 other kinds of peak file format supported by MAnormFast, 3-col tab split format, 4-col tab split format and MACS peak file. 3-col including peak chromosome, peak start and peak end.
+
 ### 3-columns tab split format
 
 ```
