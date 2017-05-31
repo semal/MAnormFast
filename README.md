@@ -17,8 +17,6 @@ should be ‘chr start end’ , if there are summit column, should put it in fou
 **Other Options:**
 > **Note:** Using --help for seeing details.
 
-**More**
-http://semal.cn:2013/
 
 ## Installation
 
