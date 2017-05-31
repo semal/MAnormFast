@@ -1,3 +1,8 @@
+## Introduction
+
+ChIP-Seq is widely used to characterize genome-wide binding patterns of transcription factors and other chromatin-associated proteins. Although comparison of ChIP-Seq data sets is critical for understanding cell type-dependent and cell state-specific binding, and thus the study of cell-specific gene regulation, few quantitative approaches have been developed. 
+
+Here, we present a simple and effective method, MAnorm, for quantitative comparison of ChIP-Seq data sets describing transcription factor binding sites and epigenetic modifications. The quantitative binding differences inferred by MAnorm showed strong correlation with both the changes in expression of target genes and the binding of cell type-specific regulators.
 
 ## Command
 
@@ -26,3 +31,10 @@ Good luck.
 > if you has any question, you could contact us by email: gzhsss2@gmail.com
 
 semal
+
+## Reference
+
+And if you want to know the detail of this model, you could download the article:
+
+[Shao Z, Zhang Y, Yuan GC, Orkin SH, Waxman DJ. (2012) MAnorm: a robust model for quantitative comparison of ChIP-Seq data sets. Genome Biol. Mar 16;13(3):R16.](https://genomebiology.biomedcentral.com/articles/10.1186/gb-2012-13-3-r16)
+
