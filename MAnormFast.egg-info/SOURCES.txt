@@ -1,0 +1,16 @@
+MANIFEST.in
+PYTHON_310_COMPATIBILITY_SUMMARY.md
+README.md
+requirements.txt
+setup.py
+MAnormFast.egg-info/PKG-INFO
+MAnormFast.egg-info/SOURCES.txt
+MAnormFast.egg-info/dependency_links.txt
+MAnormFast.egg-info/entry_points.txt
+MAnormFast.egg-info/requires.txt
+MAnormFast.egg-info/top_level.txt
+bin/MAnormFast
+lib/MAnormFast.py
+lib/MAnorm_io.py
+lib/__init__.py
+lib/peaks.py

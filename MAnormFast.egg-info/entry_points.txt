@@ -1,0 +1,2 @@
+[console_scripts]
+MAnormFast = MAnormFast.MAnormFast:command
