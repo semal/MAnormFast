@@ -1,3 +1,44 @@
+Metadata-Version: 2.4
+Name: MAnormFast
+Version: 0.1.0
+Summary: MAnorm Fast - A robust model for quantitative comparison of ChIP-Seq data sets
+Home-page: https://github.com/semal/MAnormFast
+Author: Semal
+Author-email: gzhsss2@gmail.com
+License: GNU General Public License v3 (GPLv3)
+Project-URL: Bug Reports, https://github.com/semal/MAnormFast/issues
+Project-URL: Source, https://github.com/semal/MAnormFast
+Project-URL: Documentation, https://github.com/semal/MAnormFast/blob/main/README.md
+Keywords: bioinformatics,ChIP-Seq,genomics,peak analysis,normalization
+Classifier: Development Status :: 4 - Beta
+Classifier: Intended Audience :: Science/Research
+Classifier: License :: OSI Approved :: GNU General Public License v3 (GPLv3)
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.10
+Classifier: Programming Language :: Python :: 3.11
+Classifier: Programming Language :: Python :: 3.12
+Classifier: Topic :: Scientific/Engineering :: Bio-Informatics
+Classifier: Operating System :: OS Independent
+Requires-Python: >=3.10
+Description-Content-Type: text/markdown
+Requires-Dist: numpy>=1.21.0
+Requires-Dist: matplotlib>=3.5.0
+Requires-Dist: pandas>=1.3.0
+Requires-Dist: scipy>=1.7.0
+Requires-Dist: statsmodels>=0.13.0
+Dynamic: author
+Dynamic: author-email
+Dynamic: classifier
+Dynamic: description
+Dynamic: description-content-type
+Dynamic: home-page
+Dynamic: keywords
+Dynamic: license
+Dynamic: project-url
+Dynamic: requires-dist
+Dynamic: requires-python
+Dynamic: summary
+
 # MAnormFast
 
 [![Python Version](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://python.org)

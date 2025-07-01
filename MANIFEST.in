@@ -1,0 +1,8 @@
+include README.md
+include LICENSE
+include requirements.txt
+include PYTHON_310_COMPATIBILITY_SUMMARY.md
+recursive-include lib *.py
+recursive-include bin *
+global-exclude __pycache__
+global-exclude *.py[co]
