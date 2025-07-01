@@ -2,6 +2,7 @@
 # MAnorm的输入输出都在这个脚本里面处理
 from numpy.ma import log2, log10
 import matplotlib
+import time
 
 from peaks import Peak, get_peaks_mavalues, get_peaks_normed_mavalues, \
     get_peaks_pvalues, _add_peaks, _sort_peaks_list
@@ -25,7 +26,7 @@ def _get_reads_position(reads_fp, shift):
             sli = li.split('\t')
             chrm, start, end, strand = \
                 sli[0].strip(), int(sli[1]), int(sli[2]), sli[5].strip()
-            pos = start + shift if strand is '+' else end - shift
+            pos = start + shift if strand == '+' else end - shift
             try:
                 position[chrm].append(pos)
             except KeyError:
@@ -275,7 +276,7 @@ def output_peaks_mvalue_2wig_file(pks1_uni, pks2_uni, merged_pks, comparison_nam
     """
     output of peaks with normed m value and p values
     """
-    print 'output wig files ... '
+    print('output wig files ... ')
 
     peaks = _add_peaks(_add_peaks(pks1_uni, merged_pks), pks2_uni)
     f_2write = open('_'.join([comparison_name, 'peaks_Mvalues.wig']), 'w')
@@ -309,7 +310,7 @@ def output_unbiased_peaks(pks1_uni, pks2_uni, merged_pks, unbiased_mvalue, overl
     """
     输出没有显著差异的peak
     """
-    print 'define unbiased peaks: '
+    print('define unbiased peaks: ')
 
     if not overlap_dependent:
         pks = _add_peaks(_add_peaks(pks1_uni, merged_pks), pks2_uni)
@@ -328,7 +329,7 @@ def output_unbiased_peaks(pks1_uni, pks2_uni, merged_pks, unbiased_mvalue, overl
                 line = '\t'.join([pk.chrm, '%d' % pk.start, '%d' % pk.end, 'from_%s_%d' % (name, i),
                                   '%s\n' % str(pk.normed_mvalue)])
                 file_bed.write(line)
-    print 'filter %d unbiased peaks' % i
+    print('filter %d unbiased peaks' % i)
     file_bed.close()
 
 
@@ -336,7 +337,7 @@ def output_biased_peaks(pks1_uni, pks2_uni, merged_pks, biased_mvalue, biased_pv
     """
     输出有显著差异的peaks
     """
-    print 'define biased peaks:'
+    print('define biased peaks:')
 
     if not overlap_dependent:
         pks = _add_peaks(_add_peaks(pks1_uni, merged_pks), pks2_uni)
@@ -363,29 +364,27 @@ def output_biased_peaks(pks1_uni, pks2_uni, merged_pks, biased_mvalue, biased_pv
                     line = '\t'.join([pk.chrm, '%d' % pk.start, '%d' % pk.end, 'from_%s_%d' % (name, j),
                                       '%s\n' % str(pk.normed_mvalue)])
                     file_bed_less.write(line)
-    print 'filter %d biased peaks' % (i + j)
+    print('filter %d biased peaks' % (i + j))
     file_bed_over.close(), file_bed_less.close()
 
 
 def test_read_reads():
     pos, leng = read_reads('1-reads.bed', 100)
-    print leng
+    print(leng)
 
 
 def test_read_peaks():
     pks = _read_peaks('1_peaks')
-    print pks.keys()
-    print 'Done.'
+    print(pks.keys())
+    print('Done.')
 
 
 if __name__ == '__main__':
-    import time
-
-    start_time = time.clock()
+    start_time = time.perf_counter()
 
     # test_get_reads_position()
     # test_read_peaks()
     test_read_reads()
 
-    consumption_time = time.clock() - start_time
-    print consumption_time
+    consumption_time = time.perf_counter() - start_time
+    print(consumption_time)
