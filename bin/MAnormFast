@@ -1,7 +1,8 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 # coding=utf-8
 import os
 import sys
+import time
 from optparse import OptionParser
 
 try:
@@ -133,7 +134,7 @@ def command():
     random_time = values.random_time
     output_folder = values.output
     ext = values.extension
-    min_smt_dist = values.smt_dist if values.smt_dist is not None else ext / 2
+    min_smt_dist = values.smt_dist if values.smt_dist is not None else ext // 2
     output_no_merge = values.output_no_merge
     overlap_dependent = values.overlap_dependent
     biased_pvalue = values.biased_p
@@ -143,13 +144,11 @@ def command():
     try:
         os.mkdir(output_folder)
     except OSError:
-        print '@error: folder name "%s" already exist, please change the ' \
-              'output folder name!' % output_folder
+        print('@error: folder name "%s" already exist, please change the '
+              'output folder name!' % output_folder)
         exit(0)
 
-    import time
-
-    start = time.clock()
+    start = time.perf_counter()
 
     pks1_fn, pks2_fn = \
         os.path.basename(numerator_peaks_fp), os.path.basename(
@@ -157,30 +156,30 @@ def command():
     rds1_fn, rds2_fn = \
         os.path.basename(numerator_reads_fp), os.path.basename(
             denominator_reads_fp)
-    print '\n' \
-          '# ARGUMENT LIST:\n' \
-          '# numerator peaks file=%s\n' \
-          '# denominator peaks file=%s\n' \
-          '# numerator reads file=%s\n' \
-          '# denominator reads file=%s\n' \
-          '# shift size of numerator reads=%d\n' \
-          '# shift size of denominator reads=%d\n' \
-          '# extension size of peak=%d\n' \
-          '# min summit to summit distance=%d\n' \
+    print('\n'
+          '# ARGUMENT LIST:\n'
+          '# numerator peaks file=%s\n'
+          '# denominator peaks file=%s\n'
+          '# numerator reads file=%s\n'
+          '# denominator reads file=%s\n'
+          '# shift size of numerator reads=%d\n'
+          '# shift size of denominator reads=%d\n'
+          '# extension size of peak=%d\n'
+          '# min summit to summit distance=%d\n'
           '# output folder name=%s\n' % (
               pks1_fn, pks2_fn, rds1_fn, rds2_fn,
               shift1, shift2,
               ext,
               min_smt_dist,
               output_folder
-          )
+          ))
 
     pks1_fn = pks1_fn.split('.')[0].replace(' ', '_')
     pks2_fn = pks2_fn.split('.')[0].replace(' ', '_')
     rds1_fn = rds1_fn.split('.')[0].replace(' ', '_')
     rds2_fn = rds2_fn.split('.')[0].replace(' ', '_')
 
-    print 'Reading Data, please wait for a while...'
+    print('Reading Data, please wait for a while...')
     pks1, pks2 = \
         read_peaks(numerator_peaks_fp), \
         read_peaks(denominator_peaks_fp)
@@ -188,14 +187,14 @@ def command():
         read_reads(numerator_reads_fp, shift1), \
         read_reads(denominator_reads_fp, shift2)
 
-    print 'Step1: Classify the 2 peaks by overlap'
+    print('Step1: Classify the 2 peaks by overlap')
     pks1_uniq, pks1_com, pks2_uniq, pks2_com = get_common_peaks(pks1, pks2)
-    print '%s: %d(unique) %d(common)\n%s: %d(unique) %d(common)' % \
+    print('%s: %d(unique) %d(common)\n%s: %d(unique) %d(common)' %
           (pks1_fn, get_peaks_size(pks1_uniq), get_peaks_size(pks1_com),
-           pks2_fn, get_peaks_size(pks2_uniq), get_peaks_size(pks2_com))
+           pks2_fn, get_peaks_size(pks2_uniq), get_peaks_size(pks2_com)))
     time.sleep(2)
 
-    print 'Step2: Random overlap testing, test time is %d' % random_time
+    print('Step2: Random overlap testing, test time is %d' % random_time)
     fcs = []
     for _ in range(random_time):
         pks2_random = randomize_peaks(pks2)
@@ -203,45 +202,45 @@ def command():
         fcs.append(
             1. * get_peaks_size(pks1_com) / (get_peaks_size(pks1_com_new) + 0.1)
         )  # 加0.1避免出现分母为零的情况
-    print 'fold change: mean={0:f}, std={1:f}'.format(
+    print('fold change: mean={0:f}, std={1:f}'.format(
         np.array(fcs).mean(),
         np.array(fcs).std()
-    )
+    ))
     time.sleep(2)
 
-    print 'Step3: Merging common peaks'
+    print('Step3: Merging common peaks')
     merged_pks, summit2summit_dist = merge_common_peaks(pks1_com, pks2_com)
-    print 'merged peaks: %d' % get_peaks_size(merged_pks)
+    print('merged peaks: %d' % get_peaks_size(merged_pks))
     if get_peaks_size(merged_pks) == 0:
-        print '@Error: No common peaks!!'
+        print('@Error: No common peaks!!')
         exit(1)
     time.sleep(2)
 
-    print 'Step4: Calculating peaks read density'
+    print('Step4: Calculating peaks read density')
     cal_peaks_read_density(pks1, reads_pos1, reads_pos2, ext)
     cal_peaks_read_density(pks2, reads_pos1, reads_pos2, ext)
     cal_peaks_read_density(merged_pks, reads_pos1, reads_pos2, ext)
     time.sleep(2)
 
-    print 'Step5: Using merged common peaks to fitting all peaks'
+    print('Step5: Using merged common peaks to fitting all peaks')
     ma_fit = use_merged_peaks_fit_model(
         merged_pks, summit2summit_dist, min_smt_dist
     )
     if ma_fit[0] >= 0:
-        print 'Model for normalization: ' \
-              'M = %f * A + %f' % (ma_fit[1], ma_fit[0])
+        print('Model for normalization: '
+              'M = %f * A + %f' % (ma_fit[1], ma_fit[0]))
     else:
-        print 'Model for normalization: ' \
-              'M = %f * A - %f' % (ma_fit[1], abs(ma_fit[0]))
+        print('Model for normalization: '
+              'M = %f * A - %f' % (ma_fit[1], abs(ma_fit[0])))
     time.sleep(2)
 
-    print 'Step6: Normalizing all peaks'
+    print('Step6: Normalizing all peaks')
     normalize_peaks(pks1, ma_fit)
     normalize_peaks(pks2, ma_fit)
     normalize_peaks(merged_pks, ma_fit)
     time.sleep(2)
 
-    print 'Step7: Output result'
+    print('Step7: Output result')
     os.chdir(output_folder)
     if output_no_merge:
         output_normalized_peaks(
@@ -282,7 +281,7 @@ def command():
         biased_mvalue, biased_pvalue,
         overlap_dependent
     )
-    print 'time consumption: %.2f s\nDone!' % (time.clock() - start)
+    print('time consumption: %.2f s\nDone!' % (time.perf_counter() - start))
 
 
 if __name__ == '__main__':

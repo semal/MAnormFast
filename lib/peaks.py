@@ -1,7 +1,7 @@
 # coding=utf-8
 from bisect import bisect_left, bisect_right
 from math import log, exp
-from scipy.misc import comb
+from scipy.special import comb
 import random
 import numpy as np
 from statsmodels import api as sm
@@ -16,7 +16,7 @@ class Peak(object):
         self.start = s
         self.end = e
         if smt is None:
-            self.summit = (s + e) / 2 + 1
+            self.summit = (s + e) // 2 + 1
         else:
             self.summit = smt + s
         # MAnorm因为输入是两个read文件，对一个peak用这两个read文件计算两次read count
@@ -40,7 +40,7 @@ class Peak(object):
         re_start, re_end = self.summit - ext - 1, self.summit + ext
         si = bisect_left(reads_pos[self.chrm], re_start)
         ei = bisect_right(reads_pos[self.chrm], re_end)
-        # print '%d(%d)--%d(%d)' % (si, re_start, ei, re_end)
+        # print('%d(%d)--%d(%d)' % (si, re_start, ei, re_end))
         try:
             if re_end == reads_pos[self.chrm][ei]:
                 return ei - si + 1
@@ -227,7 +227,7 @@ def _add_peaks(pks1, pks2):
     :return: 新的peaks字典
     """
     peaks = {}
-    keys = set(pks1.keys() + pks2.keys())
+    keys = set(list(pks1.keys()) + list(pks2.keys()))
     for key in keys:
         value = []
         if key in pks1.keys():
@@ -239,11 +239,11 @@ def _add_peaks(pks1, pks2):
 
 
 def __merge_sorted_peaks_list(sorted_pks_list):
-    # print 'sorted peaks length: %d' % len(sorted_pks_list)
+    # print('sorted peaks length: %d' % len(sorted_pks_list))
     merged_pks, smt_dists = [], []
 
     def get_a_merged_peak(head_loc):
-        # print head_loc
+        # print(head_loc)
         merged_pk_num = 0
         merged_pk = sorted_pks_list[head_loc]
         summits = [merged_pk.summit]
@@ -253,17 +253,17 @@ def __merge_sorted_peaks_list(sorted_pks_list):
                 summits.append(pk.summit)
                 merged_pk_num += 1
             else:
-                # print summits
+                # print(summits)
                 sorted_summits = sorted(summits)
                 smt_a, smt_b = get_summit(sorted_summits)
                 smt_dist = smt_b - smt_a
-                merged_pk.set_summit((smt_a + smt_b) / 2 + 1)
+                merged_pk.set_summit((smt_a + smt_b) // 2 + 1)
                 new_head_loc = head_loc + merged_pk_num + 1
                 return new_head_loc, merged_pk, smt_dist
         sorted_summits = sorted(summits)
         smt_a, smt_b = get_summit(sorted_summits)
         smt_dist = smt_b - smt_a
-        merged_pk.set_summit((smt_a + smt_b) / 2 + 1)
+        merged_pk.set_summit((smt_a + smt_b) // 2 + 1)
         new_head_loc = head_loc + merged_pk_num + 1
         return new_head_loc, merged_pk, smt_dist
 
