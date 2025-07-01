@@ -1,4 +1,4 @@
-from distutils.core import setup
+from setuptools import setup
 from lib import version
 
 
@@ -14,7 +14,14 @@ def main():
         license='GNU General Public License',
         author='Semal',
         author_email='gzhsss2@gmail.com',
-        description='MAnorm version, Fast but more memory'
+        description='MAnorm version, Fast but more memory',
+        python_requires='>=3.10',
+        classifiers=[
+            'Programming Language :: Python :: 3',
+            'Programming Language :: Python :: 3.10',
+            'Programming Language :: Python :: 3.11',
+            'Programming Language :: Python :: 3.12',
+        ],
     )
 
 

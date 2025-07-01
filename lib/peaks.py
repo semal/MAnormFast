@@ -1,7 +1,6 @@
 # coding=utf-8
 from bisect import bisect_left, bisect_right
-from math import log, exp
-from scipy.misc import comb
+from math import log, exp, comb
 import random
 import numpy as np
 from statsmodels import api as sm
@@ -16,7 +15,7 @@ class Peak(object):
         self.start = s
         self.end = e
         if smt is None:
-            self.summit = (s + e) / 2 + 1
+            self.summit = (s + e) // 2 + 1
         else:
             self.summit = smt + s
         # MAnorm因为输入是两个read文件，对一个peak用这两个read文件计算两次read count
@@ -89,8 +88,8 @@ def _digit_exprs_p_norm(x, y):
         xx = 1
     yy = int(round(y))
     if xx + yy < 20.0:  # if x + y small
-        p1 = round(comb(xx + yy, xx)) * 2 ** - (xx + yy + 1.0)
-        p2 = round(comb(xx + yy, yy)) * 2 ** - (xx + yy + 1.0)
+        p1 = round(comb(int(xx + yy), int(xx))) * 2 ** - (xx + yy + 1.0)
+        p2 = round(comb(int(xx + yy), int(yy))) * 2 ** - (xx + yy + 1.0)
         return max(p1, p2)
     else:  # if x + y large, use the approximate equations
         log_p = (xx + yy) * log(xx + yy) - xx * log(xx) - yy * log(yy) - (xx + yy + 1.0) * log(2.0)
@@ -227,7 +226,7 @@ def _add_peaks(pks1, pks2):
     :return: 新的peaks字典
     """
     peaks = {}
-    keys = set(pks1.keys() + pks2.keys())
+    keys = set(list(pks1.keys()) + list(pks2.keys()))
     for key in keys:
         value = []
         if key in pks1.keys():
@@ -257,13 +256,13 @@ def __merge_sorted_peaks_list(sorted_pks_list):
                 sorted_summits = sorted(summits)
                 smt_a, smt_b = get_summit(sorted_summits)
                 smt_dist = smt_b - smt_a
-                merged_pk.set_summit((smt_a + smt_b) / 2 + 1)
+                merged_pk.set_summit((smt_a + smt_b) // 2 + 1)
                 new_head_loc = head_loc + merged_pk_num + 1
                 return new_head_loc, merged_pk, smt_dist
         sorted_summits = sorted(summits)
         smt_a, smt_b = get_summit(sorted_summits)
         smt_dist = smt_b - smt_a
-        merged_pk.set_summit((smt_a + smt_b) / 2 + 1)
+        merged_pk.set_summit((smt_a + smt_b) // 2 + 1)
         new_head_loc = head_loc + merged_pk_num + 1
         return new_head_loc, merged_pk, smt_dist
 
