@@ -1,0 +1,39 @@
+[build-system]
+requires = ["setuptools>=64", "wheel"]
+build-backend = "setuptools.backends._legacy:_Backend"
+
+[project]
+name = "MAnormFast"
+version = "0.2.0"
+description = "MAnorm: a robust model for quantitative comparison of ChIP-Seq data sets"
+authors = [{name = "Semal", email = "gzhsss2@gmail.com"}]
+license = "GPL-3.0"
+requires-python = ">=3.7"
+readme = "README.md"
+dependencies = [
+    "numpy>=1.20",
+    "scipy>=1.7",
+    "matplotlib>=3.5",
+    "pandas>=1.3",
+    "statsmodels>=0.13",
+]
+
+[project.urls]
+Homepage = "https://github.com/semal/MAnormFast"
+
+[project.scripts]
+manormfast = "MAnormFast.cli:command"
+
+[tool.setuptools.packages.find]
+where = ["."]
+
+[tool.setuptools.package-dir]
+MAnormFast = "lib"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+
+[tool.flake8]
+max-line-length = 120
+ignore = ["E501", "W503", "W504"]
