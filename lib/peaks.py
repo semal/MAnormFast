@@ -1,7 +1,10 @@
 # coding=utf-8
+from __future__ import print_function, division
+
 from bisect import bisect_left, bisect_right
 from math import log, exp
-from scipy.misc import comb
+
+from scipy.special import comb
 import random
 import numpy as np
 from statsmodels import api as sm
@@ -11,17 +14,22 @@ class Peak(object):
     """
     Peak是蛋白质结合在基因组上的信号
     """
+    __slots__ = ['chrm', 'start', 'end', 'summit',
+                 'read_count1', 'read_density1', 'normed_read_density1',
+                 'read_count2', 'read_density2',
+                 'mvalue', 'avalue',
+                 'normed_mvalue', 'normed_avalue', 'pvalue']
+
     def __init__(self, c, s, e, smt=None):
         self.chrm = c
         self.start = s
         self.end = e
         if smt is None:
-            self.summit = (s + e) / 2 + 1
+            self.summit = (s + e) // 2 + 1
         else:
             self.summit = smt + s
-        # MAnorm因为输入是两个read文件，对一个peak用这两个read文件计算两次read count
         self.read_count1, self.read_density1 = 0, 0.
-        self.normed_read_density1 = 0, 0.
+        self.normed_read_density1 = 0.
         self.read_count2, self.read_density2 = 0, 0.
         self.mvalue, self.avalue = 0., 0.
         self.normed_mvalue, self.normed_avalue, self.pvalue = 0., 0., 0.
@@ -35,12 +43,11 @@ class Peak(object):
         :param reads_pos: 不同染色体reads的位点升序list组成的字典
         :return: 落在此peak的read数
         """
-        if self.chrm not in reads_pos.keys():
+        if self.chrm not in reads_pos:
             return 0
         re_start, re_end = self.summit - ext - 1, self.summit + ext
         si = bisect_left(reads_pos[self.chrm], re_start)
         ei = bisect_right(reads_pos[self.chrm], re_end)
-        # print '%d(%d)--%d(%d)' % (si, re_start, ei, re_end)
         try:
             if re_end == reads_pos[self.chrm][ei]:
                 return ei - si + 1
@@ -50,7 +57,7 @@ class Peak(object):
             return ei - si
 
     def __cal_read_density(self, reads_pos, ext):
-        read_count = self.__cal_read_count(reads_pos, ext) + 1  # 加1是为了保证每个peak的read count初始为1
+        read_count = self.__cal_read_count(reads_pos, ext) + 1
         read_density = read_count * 1000. / (2. * ext)
         return read_count, read_density
 
@@ -64,7 +71,6 @@ class Peak(object):
         """
         ma_fit: R2 = ma_fit[0] * R1 + ma_fit[1]
         """
-        # key method for normalizing read density
         normed_log2_density1 = \
             (2. - ma_fit[1]) * log(self.read_density1, 2) / (2. + ma_fit[1]) - 2. * ma_fit[0] / (2. + ma_fit[1])
         self.normed_read_density1 = 2 ** normed_log2_density1
@@ -74,10 +80,7 @@ class Peak(object):
         self.pvalue = _digit_exprs_p_norm(2. ** normed_log2_density1, self.read_density2)
 
     def isoverlap(self, other_pk):
-        if self.start <= other_pk.start < self.end or self.start < other_pk.end <= self.end:
-            return True
-        else:
-            return False
+        return self.start < other_pk.end and other_pk.start < self.end
 
 
 def _digit_exprs_p_norm(x, y):
@@ -88,11 +91,11 @@ def _digit_exprs_p_norm(x, y):
     if xx == 0:
         xx = 1
     yy = int(round(y))
-    if xx + yy < 20.0:  # if x + y small
-        p1 = round(comb(xx + yy, xx)) * 2 ** - (xx + yy + 1.0)
-        p2 = round(comb(xx + yy, yy)) * 2 ** - (xx + yy + 1.0)
+    if xx + yy < 20.0:
+        p1 = round(comb(xx + yy, xx, exact=True)) * 2 ** - (xx + yy + 1.0)
+        p2 = round(comb(xx + yy, yy, exact=True)) * 2 ** - (xx + yy + 1.0)
         return max(p1, p2)
-    else:  # if x + y large, use the approximate equations
+    else:
         log_p = (xx + yy) * log(xx + yy) - xx * log(xx) - yy * log(yy) - (xx + yy + 1.0) * log(2.0)
         if log_p < -500:
             log_p = -500
@@ -101,14 +104,8 @@ def _digit_exprs_p_norm(x, y):
 
 
 def get_peaks_size(pks):
-    """
-    获取peaks字典的数据长度
-    """
-    i = 0
-    for key in pks.keys():
-        for _ in pks[key]:
-            i += 1
-    return i
+    """获取peaks字典的数据长度"""
+    return sum(len(v) for v in pks.values())
 
 
 def cal_peaks_read_density(pks, reads_pos1, reads_pos2, ext):
@@ -116,8 +113,9 @@ def cal_peaks_read_density(pks, reads_pos1, reads_pos2, ext):
     计算pks字典中所有peak的read density
     :param pks: pks字典
     """
-    for key in pks.keys():
-        [pk.cal_read_density(reads_pos1, reads_pos2, ext) for pk in pks[key]]
+    for key in pks:
+        for pk in pks[key]:
+            pk.cal_read_density(reads_pos1, reads_pos2, ext)
 
 
 def normalize_peaks(pks, ma_fit):
@@ -125,8 +123,9 @@ def normalize_peaks(pks, ma_fit):
     :param pks: peaks字典
     :param ma_fit: 用来标准化peaks的M值和A值的模型参数
     """
-    for key in pks.keys():
-        [pk.normalize_mavalue(ma_fit) for pk in pks[key]]
+    for key in pks:
+        for pk in pks[key]:
+            pk.normalize_mavalue(ma_fit)
 
 
 def get_common_peaks(pks1, pks2):
@@ -138,8 +137,8 @@ def get_common_peaks(pks1, pks2):
     """
     pks1_unique, pks1_common, pks2_unique, pks2_common = {}, {}, {}, {}
     common_chrm = set(pks1.keys()).intersection(pks2.keys())
-    pks1_unique_chrm, pks2_unique_chrm = \
-        set(pks1.keys()).difference(common_chrm), set(pks2.keys()).difference(common_chrm)
+    pks1_unique_chrm = set(pks1.keys()).difference(common_chrm)
+    pks2_unique_chrm = set(pks2.keys()).difference(common_chrm)
     for chrm in pks1_unique_chrm:
         pks1_unique[chrm] = pks1[chrm]
     for chrm in pks2_unique_chrm:
@@ -153,9 +152,6 @@ def get_common_peaks(pks1, pks2):
 def __get_common_peaks(pks1_chrm, pks2_chrm):
     """
     两组peaks同一条染色体中peaks内找common peaks
-    :param pks1_chrm: pks1的chri染色体上的peaks
-    :param pks2_chrm: pks2的chri染色体上的peaks
-    :return: common and unique peaks
     """
     flag1, flag2 = np.zeros(len(pks1_chrm)), np.zeros(len(pks2_chrm))
     pks2_chrm_start = np.array([pk.start for pk in pks2_chrm])
@@ -169,11 +165,17 @@ def __get_common_peaks(pks1_chrm, pks2_chrm):
 
     pks1_chrm_unique, pks1_chrm_common = [], []
     for i, v in enumerate(flag1):
-        pks1_chrm_unique.append(pks1_chrm[i]) if v == 0 else pks1_chrm_common.append(pks1_chrm[i])
+        if v == 0:
+            pks1_chrm_unique.append(pks1_chrm[i])
+        else:
+            pks1_chrm_common.append(pks1_chrm[i])
 
     pks2_chrm_unique, pks2_chrm_common = [], []
     for i, v in enumerate(flag2):
-        pks2_chrm_unique.append(pks2_chrm[i]) if v == 0 else pks2_chrm_common.append(pks2_chrm[i])
+        if v == 0:
+            pks2_chrm_unique.append(pks2_chrm[i])
+        else:
+            pks2_chrm_common.append(pks2_chrm[i])
 
     return pks1_chrm_unique, pks1_chrm_common, pks2_chrm_unique, pks2_chrm_common
 
@@ -181,14 +183,13 @@ def __get_common_peaks(pks1_chrm, pks2_chrm):
 def randomize_peaks(pks):
     """
     通过随机模拟出和pks类似的random_pks
-    :param pks: 被模拟的peaks
-    :return: 模拟后的peaks
     """
     randomized_pks = {}
-    for key in pks.keys():
+    for key in pks:
         randomized_pks[key] = []
         pks_chrm = pks[key]
-        starts, ends = [pk.start for pk in pks_chrm], [pk.end for pk in pks_chrm]
+        starts = [pk.start for pk in pks_chrm]
+        ends = [pk.end for pk in pks_chrm]
         lengths = [e - s for e, s in zip(ends, starts)]
         min_start, max_end = min(starts), max(ends)
         for length in lengths:
@@ -198,21 +199,17 @@ def randomize_peaks(pks):
 
 
 def merge_common_peaks(pks1_common, pks2_common):
-    """
-    合并common peaks
-    """
+    """合并common peaks"""
     merged_pks = {}
     summit_dist = {}
-    for key in pks1_common.keys():
+    for key in pks1_common:
         mix_pks_chrm = pks1_common[key] + pks2_common[key]
         merged_pks[key], summit_dist[key] = __merge_sorted_peaks_list(_sort_peaks_list(mix_pks_chrm))
     return merged_pks, summit_dist
 
 
 def _sort_peaks_list(pks_list, start_or_summit='start'):
-    """
-    将peaks列表进行排序
-    """
+    """将peaks列表进行排序"""
     if start_or_summit == 'start':
         return [pks_list[loc] for loc in np.argsort([pk.start for pk in pks_list])]
     elif start_or_summit == 'summit':
@@ -222,28 +219,23 @@ def _sort_peaks_list(pks_list, start_or_summit='start'):
 def _add_peaks(pks1, pks2):
     """
     将peaks中对应的key的值扩展
-    :param pks1: peaks1字典
-    :param pks2: peaks2字典
-    :return: 新的peaks字典
     """
     peaks = {}
-    keys = set(pks1.keys() + pks2.keys())
+    keys = set(pks1) | set(pks2)
     for key in keys:
         value = []
-        if key in pks1.keys():
+        if key in pks1:
             value += pks1[key]
-        if key in pks2.keys():
+        if key in pks2:
             value += pks2[key]
         peaks[key] = value
     return peaks
 
 
 def __merge_sorted_peaks_list(sorted_pks_list):
-    # print 'sorted peaks length: %d' % len(sorted_pks_list)
     merged_pks, smt_dists = [], []
 
     def get_a_merged_peak(head_loc):
-        # print head_loc
         merged_pk_num = 0
         merged_pk = sorted_pks_list[head_loc]
         summits = [merged_pk.summit]
@@ -253,17 +245,16 @@ def __merge_sorted_peaks_list(sorted_pks_list):
                 summits.append(pk.summit)
                 merged_pk_num += 1
             else:
-                # print summits
                 sorted_summits = sorted(summits)
                 smt_a, smt_b = get_summit(sorted_summits)
                 smt_dist = smt_b - smt_a
-                merged_pk.set_summit((smt_a + smt_b) / 2 + 1)
+                merged_pk.set_summit((smt_a + smt_b) // 2 + 1)
                 new_head_loc = head_loc + merged_pk_num + 1
                 return new_head_loc, merged_pk, smt_dist
         sorted_summits = sorted(summits)
         smt_a, smt_b = get_summit(sorted_summits)
         smt_dist = smt_b - smt_a
-        merged_pk.set_summit((smt_a + smt_b) / 2 + 1)
+        merged_pk.set_summit((smt_a + smt_b) // 2 + 1)
         new_head_loc = head_loc + merged_pk_num + 1
         return new_head_loc, merged_pk, smt_dist
 
@@ -285,11 +276,9 @@ def get_summit(sorted_summits):
 
 
 def use_merged_peaks_fit_model(merged_pks, summit_dist, min_summit_dist):
-    """
-    利用合并后的peaks来拟合模型
-    """
+    """利用合并后的peaks来拟合模型"""
     selected_pks = {}
-    for key in merged_pks.keys():
+    for key in merged_pks:
         selected_pks[key] = []
         for pk, smt_d in zip(merged_pks[key], summit_dist[key]):
             if smt_d <= min_summit_dist:
@@ -299,7 +288,6 @@ def use_merged_peaks_fit_model(merged_pks, summit_dist, min_summit_dist):
     fit_y = np.array(mvalues)
     idx_sel = np.where((fit_y >= -10) & (fit_y <= 10))[0]
 
-    # fit the model
     x = sm.add_constant(fit_x[idx_sel])
     y = fit_y[idx_sel]
     ma_fit = sm.RLM(y, x).fit().params
@@ -307,42 +295,29 @@ def use_merged_peaks_fit_model(merged_pks, summit_dist, min_summit_dist):
 
 
 def get_peaks_mavalues(pks):
-    """
-    返回peaks所有的m, a值对
-    :param pks: peaks字典
-    :return: mvalues, avalues
-    """
+    """返回peaks所有的m, a值对"""
     mvalues, avalues = [], []
-    for key in pks.keys():
+    for key in pks:
         for pk in pks[key]:
-            mvalues.append(pk.mvalue), avalues.append(pk.avalue)
-
+            mvalues.append(pk.mvalue)
+            avalues.append(pk.avalue)
     return mvalues, avalues
 
 
 def get_peaks_normed_mavalues(pks):
-    """
-    返回peaks normalization之后所有的m, a值对
-    :param pks: peaks字典
-    :return: normed_mvalues, normed_avalues
-    """
+    """返回peaks normalization之后所有的m, a值对"""
     normed_mvalues, normed_avalues = [], []
-    for key in pks.keys():
+    for key in pks:
         for pk in pks[key]:
-            normed_mvalues.append(pk.normed_mvalue), normed_avalues.append(pk.normed_avalue)
-
+            normed_mvalues.append(pk.normed_mvalue)
+            normed_avalues.append(pk.normed_avalue)
     return normed_mvalues, normed_avalues
 
 
 def get_peaks_pvalues(pks):
-    """
-    返回peaks normalization之后所有的p值
-    :param pks: peaks字典
-    :return: pvalues
-    """
+    """返回peaks normalization之后所有的p值"""
     pvalues = []
-    for key in pks.keys():
+    for key in pks:
         for pk in pks[key]:
             pvalues.append(pk.pvalue)
-
     return pvalues
